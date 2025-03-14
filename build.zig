@@ -1,0 +1,60 @@
+const std = @import("std");
+
+pub fn build(b: *std.Build) void {
+    const target = b.resolveTargetQuery(.{ .os_tag = .linux, .cpu_arch = .x86_64, .abi = .gnu });
+    const targetWindows = b.resolveTargetQuery(.{ .os_tag = .windows, .cpu_arch = .x86_64 });
+    const optimize = b.standardOptimizeOption(.{});
+
+    const exe = b.addExecutable(.{
+        .name = "quranReader-linux",
+        .target = target,
+        .optimize = optimize,
+    });
+
+    const exeWindows = b.addExecutable(.{
+        .name = "quranReader-windows",
+        .target = targetWindows,
+        .optimize = optimize,
+    });
+
+    exe.addCSourceFiles(.{ .files = &.{"./src/main.c"}, .flags = &.{ "-Wall", "-Wextra", "-pedantic","-g3" } });
+
+    exeWindows.addCSourceFiles(.{ .files = &.{"./src/main.c"}, .flags = &.{ "-Wall", "-Wextra", "-pedantic"} });
+
+    exe.addIncludePath(b.path("."));
+    exeWindows.addIncludePath(b.path("."));
+
+
+    exe.addObjectFile(b.path("lib/linux/libraylib.a"));
+    exe.addLibraryPath(.{ .cwd_relative = "/usr/lib64" });
+
+    exe.linkSystemLibrary("m");
+    exe.linkSystemLibrary("GL");
+    exe.linkSystemLibrary("pthread");
+    exe.linkSystemLibrary("dl");
+    exe.linkSystemLibrary("rt");
+    exe.linkSystemLibrary("X11");
+
+
+
+    exeWindows.addObjectFile(b.path("lib/windows/libraylib.a"));
+
+    exeWindows.linkSystemLibrary("gdi32");
+    exeWindows.linkSystemLibrary("winmm");
+    exeWindows.linkSystemLibrary("opengl32");
+
+    exe.linkLibC();
+    exeWindows.linkLibC();
+
+    b.installArtifact(exe);
+    b.installArtifact(exeWindows);
+
+    const run_cmd = b.addRunArtifact(exe);
+    run_cmd.step.dependOn(b.getInstallStep());
+    if (b.args) |args| {
+        run_cmd.addArgs(args);
+    }
+
+    const run_step = b.step("run", "Run the app");
+    run_step.dependOn(&run_cmd.step);
+}
