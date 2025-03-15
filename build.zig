@@ -17,25 +17,14 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    exe.addCSourceFiles(.{ .files = &.{"./src/main.c"}, .flags = &.{ "-Wall", "-Wextra", "-pedantic","-g3" } });
+    exe.addCSourceFiles(.{ .files = &.{"./src/main.c"}, .flags = &.{ "-Wall", "-Wextra", "-std=c99", "-pedantic", "-g3"} });
 
-    exeWindows.addCSourceFiles(.{ .files = &.{"./src/main.c"}, .flags = &.{ "-Wall", "-Wextra", "-pedantic"} });
+    exeWindows.addCSourceFiles(.{ .files = &.{"./src/main.c"}, .flags = &.{ "-Wall", "-Wextra", "-std=c99", "-pedantic" } });
 
     exe.addIncludePath(b.path("."));
     exeWindows.addIncludePath(b.path("."));
 
-
     exe.addObjectFile(b.path("lib/linux/libraylib.a"));
-    exe.addLibraryPath(.{ .cwd_relative = "/usr/lib64" });
-
-    exe.linkSystemLibrary("m");
-    exe.linkSystemLibrary("GL");
-    exe.linkSystemLibrary("pthread");
-    exe.linkSystemLibrary("dl");
-    exe.linkSystemLibrary("rt");
-    exe.linkSystemLibrary("X11");
-
-
 
     exeWindows.addObjectFile(b.path("lib/windows/libraylib.a"));
 
