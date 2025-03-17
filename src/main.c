@@ -1,11 +1,13 @@
 #include <stdio.h>
 #ifdef _WIN32
     #include "include/windows/raylib.h"
-#else
+    #else
     #include "include/linux/raylib.h"
+    
 #endif
-
-#include <errno.h>
+#include "include/cJSON/cJSON.h"
+#include <errno.h> 
+#include <stdlib.h>
 
 typedef struct {
     char* name;
@@ -14,7 +16,7 @@ typedef struct {
     int status; 
 }File;
 
-File populateFile();
+File populateFile(File*);
 
 
 int main(void){
@@ -25,8 +27,54 @@ int main(void){
 
   
     (void)printf("[INFO] Populate File...\n");
-    File file = populateFile();
 
+    File file = {
+        .name = "quran.json",
+        .p  = NULL,
+        .mode = "r",
+        .status = EOF
+    };
+
+    file = populateFile(&file);
+    
+    char *buffer = NULL;
+    size_t bufferSize = 0;
+    
+    for (;;)
+    {
+        const int ch = fgetc(file.p);
+        if (ch == EOF)
+            break;  /* Error or end of file */
+    
+        char *tmp = realloc(buffer, bufferSize + 1);
+        if (tmp == NULL)
+            break;  /* Could not allocate memory */
+    
+        buffer = tmp;
+        buffer[bufferSize++] = ch;
+    }
+    fclose(file.p); 
+
+  
+    int status = 0;
+    cJSON *file_json = cJSON_Parse(buffer);
+
+    if (file_json == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+        }
+        status = 0;
+        goto end;
+    }
+    const cJSON *name = NULL;
+    name = cJSON_GetObjectItemCaseSensitive(file_json, "data");
+    if (cJSON_IsString(name) && (name->valuestring != NULL))
+    {
+        printf("Checking source \"%s\"\n", name->valuestring);
+    }
     
 
     SetTargetFPS(60);
@@ -40,20 +88,17 @@ int main(void){
     }
     
     CloseWindow();
+    end:
+    cJSON_Delete(file_json);
+    free(buffer);
+    return status;
     
     return 0;
 }
 
 
-File populateFile(){
-    
-    File file = {
-        .name = "quran.json",
-        .p  = NULL,
-        .mode = "r",
-        .status = EOF
-    };
-
+File populateFile(File *pFile){
+    File file = *pFile;
     file.p = fopen(file.name,file.mode);
 
     

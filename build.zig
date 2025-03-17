@@ -17,9 +17,9 @@ pub fn build(b: *std.Build) void {
         .optimize = optimize,
     });
 
-    exe.addCSourceFiles(.{ .files = &.{"./src/main.c"}, .flags = &.{ "-Wall", "-Wextra", "-std=c99", "-pedantic", "-g3"} });
+    exe.addCSourceFiles(.{ .files = &.{ "./src/main.c", "./include/cJSON/cJSON.c" }, .flags = &.{ "-Wall", "-Wextra", "-std=c99", "-pedantic", "-g3" } });
 
-    exeWindows.addCSourceFiles(.{ .files = &.{"./src/main.c"}, .flags = &.{ "-Wall", "-Wextra", "-std=c99", "-pedantic" } });
+    exeWindows.addCSourceFiles(.{ .files = &.{ "./src/main.c", "./include/cJSON/cJSON.c" }, .flags = &.{ "-Wall", "-Wextra", "-std=c99", "-pedantic" } });
 
     exe.addIncludePath(b.path("."));
     exeWindows.addIncludePath(b.path("."));

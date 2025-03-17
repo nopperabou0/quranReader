@@ -28,6 +28,8 @@ zig build run
 ## Credits
 
 - raylib library https://github.com/raysan5/raylib
+- arabic and Quran translation from https://reader.quranite.com
+- cJSON library https://github.com/DaveGamble/cJSON
 
 ## Roadmap
 - [x] making build.zig
