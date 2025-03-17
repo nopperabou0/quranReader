@@ -30,6 +30,10 @@ zig build run
 - raylib library https://github.com/raysan5/raylib
 - arabic and Quran translation from https://reader.quranite.com
 - cJSON library https://github.com/DaveGamble/cJSON
+<<<<<<< HEAD
+=======
+- https://stackoverflow.com/questions/19111481/reading-and-storing-dynamically-to-char-array
+>>>>>>> 54ad73c ([add] read json into buffer)
 
 ## Roadmap
 - [x] making build.zig
