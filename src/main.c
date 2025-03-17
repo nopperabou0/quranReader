@@ -7,69 +7,27 @@
 
 #include <errno.h>
 
+typedef struct {
+    char* name;
+    FILE* p ;
+    char* mode;
+    int status; 
+}File;
 
-FILE *openFile (char*,char*);
-int checkContent(char*,FILE*); 
+File populateFile();
+
 
 int main(void){
-    
     const int WIDTH_SCREEN = 800;
     const int HEIGHT_SCREEN = 600;
-    
-    InitWindow(WIDTH_SCREEN,HEIGHT_SCREEN,"Quran Reader");
-    
-    char *fileName  = "quran.json" ;
-    FILE *pFile =  openFile(fileName,"r"); 
-    if (!pFile)
-    {   
-        printf("[INFO] File doesnt exist!\n");  
-        printf("[INFO] Creating Empty File!\n");
-        pFile = fopen(fileName,"w"); 
-        if (!pFile)
-        {   
-            perror("[ERROR] Creating File Failed");
-            return 1;    
-        }
-        pFile = freopen(fileName,"r",pFile);
-          
-    }
-    else {
-        printf("[INFO] File does exist!\n"); 
-    }
 
-    if (!pFile)
-    {   
-        perror("[ERROR] Read Failed");
-        return 2;    
-    }
+    (void)InitWindow(WIDTH_SCREEN,HEIGHT_SCREEN,"Quran Reader");
 
-    int fileStatus = checkContent(fileName,pFile);
-    
-    // is this how to handle the error?
-    // i dont think so, if its EOF, its either file empty or unget failed
-    if (fileStatus == EOF) {
-        printf("[INFO] File Empty, When it shouldnt \n");
-        
-        // TO DO : download json content over internet and put it into file,
-        // will return error for now.
-        // copyJson();
-
-        // return 3;
-
-    }
-    fileStatus = ungetc (fileStatus,pFile);
-    if (fileStatus == EOF) {
-        printf("[INFO] Unget Failed \n");
-        // Turn this on when copyJson() func have been made.
-        // return 4; 
-    }
-    printf("[INFO] Unget Success! \n");
+  
+    (void)printf("[INFO] Populate File...\n");
+    File file = populateFile();
 
     
-    
-    
-    printf ("[INFO] Lets Start Reading JSON now!\n");
-
 
     SetTargetFPS(60);
     
@@ -86,21 +44,65 @@ int main(void){
     return 0;
 }
 
-FILE *openFile (char *fileName,char* mode){
-    FILE *pFile;
-    pFile = fopen(fileName,mode);
-    return pFile;
-}
 
-int checkContent (char *fileName,FILE *pFile){
+File populateFile(){
+    
+    File file = {
+        .name = "quran.json",
+        .p  = NULL,
+        .mode = "r",
+        .status = EOF
+    };
 
-    int status;
+    file.p = fopen(file.name,file.mode);
 
-    status = fgetc(pFile);
-
-    if (status != EOF) {
-        return status;
+    
+    if (!file.p)
+    {   
+        (void)printf("[INFO] File doesnt exist!\n");  
+        (void)printf("[INFO] Creating Empty File!\n");
+        file.mode = "w";
+        file.p = fopen(file.name,file.mode);
+        if (!file.p) {
+            (void)perror("[Error] Failed Creating File"); 
+        } 
     }
-    return EOF;   
-}
 
+    // file must open in read mode   
+    if (file.mode != "r") {
+        file.mode = "r";
+        file.p = freopen(file.name,file.mode,file.p);         
+        if (!file.p) {
+            (void)perror("[Error] Failed setting file mode to read"); 
+        } 
+        
+    }
+
+    printf("[INFO] File does exist!\n");
+    
+
+    file.status = fgetc(file.p);
+
+    // Assume if this triggered then file empty not error
+    if (file.status == EOF) {
+        printf("[INFO] File Empty, When it shouldnt \n");
+        
+        // TO DO : download json content over internet and put it into file,
+        // will return error if copy failed
+        //(void)perror("[Error] Failed copying file over internet")
+    }
+
+    file.status = ungetc (file.status,file.p);
+    
+    // Assume if this triggered then file empty not error
+    if (file.status == EOF) {
+        printf("[Error] File still empty somehow \n");
+        // Turn this on when download JSON func have been made.
+        // return 4; 
+    }
+
+    printf("[INFO] File not empty! \n");
+    printf ("[INFO] Lets Start Reading JSON now!\n");
+
+    return file;
+}
