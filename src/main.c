@@ -8,6 +8,7 @@
 #include "include/cJSON/cJSON.h"
 #include <errno.h> 
 #include <stdlib.h>
+#include <string.h>
 
 typedef struct {
     char* name;
@@ -15,6 +16,16 @@ typedef struct {
     char* mode;
     int status; 
 }File;
+
+typedef struct {
+const cJSON* data;
+const cJSON* element;
+const cJSON* id ;
+const cJSON* chapter;
+const cJSON* verse;
+const cJSON* english;
+const cJSON* arabic;
+}DataJson;
 
 File populateFile(File*);
 
@@ -40,6 +51,7 @@ int main(void){
     char *buffer = NULL;
     size_t bufferSize = 0;
     
+    // https://stackoverflow.com/questions/19111481/reading-and-storing-dynamically-to-char-array
     for (;;)
     {
         const int ch = fgetc(file.p);
@@ -55,11 +67,11 @@ int main(void){
     }
     fclose(file.p); 
 
-  
+    // https://github.com/DaveGamble/cJSON
     int status = 0;
-    cJSON *file_json = cJSON_Parse(buffer);
+    cJSON *fileJson = cJSON_Parse(buffer);
 
-    if (file_json == NULL)
+    if (fileJson == NULL)
     {
         const char *error_ptr = cJSON_GetErrorPtr();
         if (error_ptr != NULL)
@@ -69,14 +81,34 @@ int main(void){
         status = 0;
         goto end;
     }
-    const cJSON *name = NULL;
-    name = cJSON_GetObjectItemCaseSensitive(file_json, "data");
-    if (cJSON_IsString(name) && (name->valuestring != NULL))
-    {
-        printf("Checking source \"%s\"\n", name->valuestring);
+    
+    DataJson dataJson = {
+        .data = NULL,
+        .element = NULL,
+        .id = NULL,
+        .chapter = NULL,
+        .verse = NULL,
+        .english = NULL,
+        .arabic = NULL
+    };
+
+    dataJson.data = cJSON_GetObjectItemCaseSensitive(fileJson, "data");
+    
+    //TO DO : randomizer for id 
+    
+    cJSON_ArrayForEach(dataJson.element,dataJson.data){
+        dataJson.id = cJSON_GetObjectItemCaseSensitive(dataJson.element,"id");
+        dataJson.chapter = cJSON_GetObjectItemCaseSensitive(dataJson.element,"chapter");
+        dataJson.verse = cJSON_GetObjectItemCaseSensitive(dataJson.element,"verse");
+        dataJson.english = cJSON_GetObjectItemCaseSensitive(dataJson.element,"english");
+        dataJson.arabic = cJSON_GetObjectItemCaseSensitive(dataJson.element,"arabic");  
+        if (!strcmp(dataJson.id->valuestring,"4"))
+        {
+            printf("id is %s\n",dataJson.id->valuestring);
+            printf("chapter is %s\n",dataJson.chapter->valuestring);
+        } 
     }
     
-
     SetTargetFPS(60);
     
     while(!WindowShouldClose()){
@@ -89,7 +121,7 @@ int main(void){
     
     CloseWindow();
     end:
-    cJSON_Delete(file_json);
+    cJSON_Delete(fileJson);
     free(buffer);
     return status;
     
@@ -114,7 +146,7 @@ File populateFile(File *pFile){
     }
 
     // file must open in read mode   
-    if (file.mode != "r") {
+    if (strcmp(file.mode, "r")) {
         file.mode = "r";
         file.p = freopen(file.name,file.mode,file.p);         
         if (!file.p) {
