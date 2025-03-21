@@ -36,50 +36,64 @@ int main(void){
 
     (void)InitWindow(WIDTH_SCREEN,HEIGHT_SCREEN,"Quran Reader");
 
-  
-    (void)printf("[INFO] Populate File...\n");
-
     File file = {
         .name = "quran.json",
         .p  = NULL,
         .mode = "r",
         .status = EOF
     };
+  
+    (void)printf("[INFO] Populate File...\n");
+
 
     file = populateFile(&file);
     
     char *buffer = NULL;
     size_t bufferSize = 0;
     
+
     // https://stackoverflow.com/questions/19111481/reading-and-storing-dynamically-to-char-array
     for (;;)
     {
         const int ch = fgetc(file.p);
-        if (ch == EOF)
-            break;  /* Error or end of file */
-    
+
+        if (ferror(file.p)) {
+            (void)perror("[ERROR] Reading failed \n");
+            free(buffer);
+            exit(EXIT_FAILURE);
+        }
+        if (feof(file.p)){
+            (void)printf("[INFO] Reading finished, reaching end of file \n");
+            break;
+        }
         char *tmp = realloc(buffer, bufferSize + 1);
-        if (tmp == NULL)
-            break;  /* Could not allocate memory */
-    
+        if (tmp == NULL){
+            (void)perror("[ERROR] Could not allocate memory \n");
+            free(buffer);
+            exit(EXIT_FAILURE); 
+        }
         buffer = tmp;
         buffer[bufferSize++] = ch;
     }
     fclose(file.p); 
 
     // https://github.com/DaveGamble/cJSON
-    int status = 0;
     cJSON *fileJson = cJSON_Parse(buffer);
 
     if (fileJson == NULL)
     {
         const char *error_ptr = cJSON_GetErrorPtr();
         if (error_ptr != NULL)
-        {
-            fprintf(stderr, "Error before: %s\n", error_ptr);
+        {     
+            (void)fprintf(stderr, 
+                "[ERROR] Error parsing before: %s.\n Are you sure your JSON file valid? \n",
+                 error_ptr);
+
+            cJSON_Delete(fileJson);
+            free(buffer);        
+            exit(EXIT_FAILURE);
         }
-        status = 0;
-        goto end;
+        
     }
     
     DataJson dataJson = {
@@ -120,12 +134,11 @@ int main(void){
     }
     
     CloseWindow();
-    end:
+    // not sure which one to be freed 
+
     cJSON_Delete(fileJson);
-    free(buffer);
-    return status;
-    
-    return 0;
+    free(buffer);        
+    return EXIT_SUCCESS;
 }
 
 
@@ -141,7 +154,8 @@ File populateFile(File *pFile){
         file.mode = "w";
         file.p = fopen(file.name,file.mode);
         if (!file.p) {
-            (void)perror("[Error] Failed Creating File"); 
+            (void)perror("[Error] Failed Creating File \n"); 
+            exit(EXIT_FAILURE);
         } 
     }
 
@@ -150,18 +164,25 @@ File populateFile(File *pFile){
         file.mode = "r";
         file.p = freopen(file.name,file.mode,file.p);         
         if (!file.p) {
-            (void)perror("[Error] Failed setting file mode to read"); 
+            (void)perror("[Error] Failed setting file mode to read \n"); 
+            exit(EXIT_FAILURE);
         } 
         
     }
 
-    printf("[INFO] File does exist!\n");
+    printf("[INFO] File does exist! \n");
     
 
     file.status = fgetc(file.p);
 
+    if (ferror(file.p)){
+        perror("[ERROR] Checking file for any content failed \n");
+        exit(EXIT_FAILURE);
+    }
+
+
     // Assume if this triggered then file empty not error
-    if (file.status == EOF) {
+    if (feof(file.p)) {
         printf("[INFO] File Empty, When it shouldnt \n");
         
         // TO DO : download json content over internet and put it into file,
@@ -169,14 +190,7 @@ File populateFile(File *pFile){
         //(void)perror("[Error] Failed copying file over internet")
     }
 
-    file.status = ungetc (file.status,file.p);
-    
-    // Assume if this triggered then file empty not error
-    if (file.status == EOF) {
-        printf("[Error] File still empty somehow \n");
-        // Turn this on when download JSON func have been made.
-        // return 4; 
-    }
+    (void)ungetc (file.status,file.p);
 
     printf("[INFO] File not empty! \n");
     printf ("[INFO] Lets Start Reading JSON now!\n");
