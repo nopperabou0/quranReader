@@ -25,10 +25,11 @@ const cJSON* chapter;
 const cJSON* verse;
 const cJSON* english;
 const cJSON* arabic;
-}DataJson;
+}DataJSON;
+
 
 File populateFile(File*);
-
+char *readFile(File*);
 
 int main(void){
     const int WIDTH_SCREEN = 800;
@@ -44,59 +45,35 @@ int main(void){
     };
   
     (void)printf("[INFO] Populate File...\n");
-
-
     file = populateFile(&file);
+
+    (void)printf("[INFO] Reading File...\n");
+    char *buffer = readFile(&file);
+    fclose(file.p); // Maybe should check the error
+
+    (void)printf("[INFO] Parsing File...\n");
+  
+    //  DataJSON type not reusable but it will do for now
+    //  Also naming sense is awful
     
-    char *buffer = NULL;
-    size_t bufferSize = 0;
-    
-
-    // https://stackoverflow.com/questions/19111481/reading-and-storing-dynamically-to-char-array
-    for (;;)
-    {
-        const int ch = fgetc(file.p);
-
-        if (ferror(file.p)) {
-            (void)perror("[ERROR] Reading failed \n");
-            free(buffer);
-            exit(EXIT_FAILURE);
-        }
-        if (feof(file.p)){
-            (void)printf("[INFO] Reading finished, reaching end of file \n");
-            break;
-        }
-        char *tmp = realloc(buffer, bufferSize + 1);
-        if (tmp == NULL){
-            (void)perror("[ERROR] Could not allocate memory \n");
-            free(buffer);
-            exit(EXIT_FAILURE); 
-        }
-        buffer = tmp;
-        buffer[bufferSize++] = ch;
-    }
-    fclose(file.p); 
-
     // https://github.com/DaveGamble/cJSON
-    cJSON *fileJson = cJSON_Parse(buffer);
+    // fileJSON must be free later, have'nt put this in different function, it will be unconvenient to do so 
+    cJSON *fileJSON = cJSON_Parse(buffer);
 
-    if (fileJson == NULL)
-    {
+    if (fileJSON == NULL) {
         const char *error_ptr = cJSON_GetErrorPtr();
-        if (error_ptr != NULL)
-        {     
+        if (error_ptr != NULL) {     
             (void)fprintf(stderr, 
                 "[ERROR] Error parsing before: %s.\n Are you sure your JSON file valid? \n",
                  error_ptr);
 
-            cJSON_Delete(fileJson);
+            cJSON_Delete(fileJSON);
             free(buffer);        
             exit(EXIT_FAILURE);
         }
-        
     }
-    
-    DataJson dataJson = {
+
+    DataJSON dataJSON = {
         .data = NULL,
         .element = NULL,
         .id = NULL,
@@ -105,21 +82,20 @@ int main(void){
         .english = NULL,
         .arabic = NULL
     };
+    dataJSON.data = cJSON_GetObjectItemCaseSensitive(fileJSON, "data");
 
-    dataJson.data = cJSON_GetObjectItemCaseSensitive(fileJson, "data");
-    
     //TO DO : randomizer for id 
     
-    cJSON_ArrayForEach(dataJson.element,dataJson.data){
-        dataJson.id = cJSON_GetObjectItemCaseSensitive(dataJson.element,"id");
-        dataJson.chapter = cJSON_GetObjectItemCaseSensitive(dataJson.element,"chapter");
-        dataJson.verse = cJSON_GetObjectItemCaseSensitive(dataJson.element,"verse");
-        dataJson.english = cJSON_GetObjectItemCaseSensitive(dataJson.element,"english");
-        dataJson.arabic = cJSON_GetObjectItemCaseSensitive(dataJson.element,"arabic");  
-        if (!strcmp(dataJson.id->valuestring,"4"))
+    cJSON_ArrayForEach(dataJSON.element,dataJSON.data){
+        dataJSON.id = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"id");
+        dataJSON.chapter = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"chapter");
+        dataJSON.verse = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"verse");
+        dataJSON.english = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"english");
+        dataJSON.arabic = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"arabic");  
+        if (!strcmp(dataJSON.id->valuestring,"4"))
         {
-            printf("id is %s\n",dataJson.id->valuestring);
-            printf("chapter is %s\n",dataJson.chapter->valuestring);
+            printf("id is %s\n",dataJSON.id->valuestring);
+            printf("chapter is %s\n",dataJSON.chapter->valuestring);
         } 
     }
     
@@ -132,12 +108,9 @@ int main(void){
        
         EndDrawing();
     }
-    
-    CloseWindow();
-    // not sure which one to be freed 
 
-    cJSON_Delete(fileJson);
-    free(buffer);        
+    cJSON_Delete(fileJSON);
+    CloseWindow();
     return EXIT_SUCCESS;
 }
 
@@ -197,3 +170,39 @@ File populateFile(File *pFile){
 
     return file;
 }
+
+
+char* readFile(File *pFile){
+    File file = *pFile;
+    char* buffer = NULL;
+    size_t bufferSize = 0;
+    
+
+    // https://stackoverflow.com/questions/19111481/reading-and-storing-dynamically-to-char-array
+    for (;;)
+    {
+        const int ch = fgetc(file.p);
+
+        if (ferror(file.p)) {
+            (void)perror("[ERROR] Reading failed \n");
+            free(buffer);
+            exit(EXIT_FAILURE);
+        }
+        if (feof(file.p)){
+            (void)printf("[INFO] Reading finished, reaching end of file \n");
+            break;
+        }
+        char *tmp = realloc(buffer, bufferSize + 1);
+        if (tmp == NULL){
+            (void)perror("[ERROR] Could not allocate memory \n");
+            free(buffer);
+            exit(EXIT_FAILURE); 
+        }
+        buffer = tmp;
+        buffer[bufferSize++] = ch;
+    }
+    return buffer;
+}
+
+
+
