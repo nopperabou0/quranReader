@@ -17,6 +17,8 @@ typedef struct {
     int status; 
 }File;
 
+//  DataJSON type not reusable but it will do for now.
+//  Also naming sense is awful
 typedef struct {
 const cJSON* data;
 const cJSON* element;
@@ -30,6 +32,7 @@ const cJSON* arabic;
 
 File populateFile(File*);
 char *readFile(File*);
+cJSON *parseFile(char *buffer);  
 
 int main(void){
     const int WIDTH_SCREEN = 800;
@@ -52,27 +55,9 @@ int main(void){
     fclose(file.p); // Maybe should check the error
 
     (void)printf("[INFO] Parsing File...\n");
-  
-    //  DataJSON type not reusable but it will do for now
-    //  Also naming sense is awful
-    
-    // https://github.com/DaveGamble/cJSON
-    // fileJSON must be free later, have'nt put this in different function, it will be unconvenient to do so 
-    cJSON *fileJSON = cJSON_Parse(buffer);
 
-    if (fileJSON == NULL) {
-        const char *error_ptr = cJSON_GetErrorPtr();
-        if (error_ptr != NULL) {     
-            (void)fprintf(stderr, 
-                "[ERROR] Error parsing before: %s.\n Are you sure your JSON file valid? \n",
-                 error_ptr);
-
-            cJSON_Delete(fileJSON);
-            free(buffer);        
-            exit(EXIT_FAILURE);
-        }
-    }
-
+    cJSON *fileJSON = parseFile(buffer); 
+        
     DataJSON dataJSON = {
         .data = NULL,
         .element = NULL,
@@ -81,7 +66,7 @@ int main(void){
         .verse = NULL,
         .english = NULL,
         .arabic = NULL
-    };
+    };    
     dataJSON.data = cJSON_GetObjectItemCaseSensitive(fileJSON, "data");
 
     //TO DO : randomizer for id 
@@ -153,14 +138,13 @@ File populateFile(File *pFile){
         exit(EXIT_FAILURE);
     }
 
-
-    // Assume if this triggered then file empty not error
     if (feof(file.p)) {
         printf("[INFO] File Empty, When it shouldnt \n");
         
-        // TO DO : download json content over internet and put it into file,
+        // TO DO : Download json content over internet and put it into file, 
         // will return error if copy failed
-        //(void)perror("[Error] Failed copying file over internet")
+        //  (void)perror("[Error] Failed copying file over internet")
+        //  exit(EXIT_FAILURE)
     }
 
     (void)ungetc (file.status,file.p);
@@ -171,14 +155,12 @@ File populateFile(File *pFile){
     return file;
 }
 
-
+// https://stackoverflow.com/questions/19111481/reading-and-storing-dynamically-to-char-array
 char* readFile(File *pFile){
     File file = *pFile;
     char* buffer = NULL;
     size_t bufferSize = 0;
     
-
-    // https://stackoverflow.com/questions/19111481/reading-and-storing-dynamically-to-char-array
     for (;;)
     {
         const int ch = fgetc(file.p);
@@ -198,11 +180,32 @@ char* readFile(File *pFile){
             free(buffer);
             exit(EXIT_FAILURE); 
         }
+
         buffer = tmp;
         buffer[bufferSize++] = ch;
     }
     return buffer;
 }
+    
+// https://github.com/DaveGamble/cJSON
+cJSON *parseFile (char* buffer){
+    cJSON *fileJSON = cJSON_Parse(buffer);
+
+    if (fileJSON == NULL) {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL) {     
+            (void)fprintf(stderr, 
+                "[ERROR] Error parsing before: %s.\n Are you sure your JSON file valid? \n",
+                 error_ptr);
+
+            cJSON_Delete(fileJSON);
+            free(buffer);        
+            exit(EXIT_FAILURE);
+        }
+    }
+    return fileJSON;
+}  
+
 
 
 
