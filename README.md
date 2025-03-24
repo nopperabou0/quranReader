@@ -31,6 +31,8 @@ zig build run
 - arabic and Quran translation from https://reader.quranite.com
 - cJSON library https://github.com/DaveGamble/cJSON
 - https://stackoverflow.com/questions/19111481/reading-and-storing-dynamically-to-char-array
+- https://crypto.stackexchange.com/questions/107946/is-there-a-counterpart-of-dev-random-and-dev-urandom-in-windows-nt-systems
+- https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom
 
 ## Roadmap
 - [x] making build.zig
