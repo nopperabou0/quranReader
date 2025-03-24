@@ -1,10 +1,13 @@
-#include <stdio.h>
 #ifdef _WIN32
+    #include "include/windows/windowsonly.h"
     #include "include/windows/raylib.h"
-    #else
+    #else 
     #include "include/linux/raylib.h"
-    
 #endif
+
+
+
+#include <stdio.h>
 #include "include/cJSON/cJSON.h"
 #include <errno.h> 
 #include <stdlib.h>
@@ -83,6 +86,31 @@ int main(void){
             printf("chapter is %s\n",dataJSON.chapter->valuestring);
         } 
     }
+
+    cJSON_Delete(dataJSON.element);
+    
+    #ifdef _WIN32
+    int  number =  randomizeNumber ();
+    char str[12];          
+
+    snprintf(str, sizeof(str), "%i", number);
+    cJSON_ArrayForEach(dataJSON.element,dataJSON.data){
+        dataJSON.id = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"id");
+        dataJSON.chapter = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"chapter");
+        dataJSON.verse = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"verse");
+        dataJSON.english = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"english");
+        dataJSON.arabic = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"arabic");  
+        if (!strcmp(dataJSON.id->valuestring,str))
+        {
+            printf("id is %s\n",dataJSON.id->valuestring);
+            printf("chapter is %s\n",dataJSON.chapter->valuestring);
+            printf("arabic is %s\n",dataJSON.arabic->valuestring);
+        } 
+    }
+
+
+
+    #endif
     
     SetTargetFPS(60);
     

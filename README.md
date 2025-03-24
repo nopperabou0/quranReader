@@ -38,6 +38,6 @@ zig build run
 - [x] test hello world raylib in windows
 - [x] check if json file exist
 - [ ] [HARD] if json doesnt exist, copy json from internet to empty file ,optional: maybe there is also need  to check if json already valid!, for now lets pretend its valid
-- [ ] searching json library for c  
+- [x] searching json library for c  
 - [ ] read json file that contain arabic and translation
 - [ ] [HARD] build raylib using zig make it fully static, this zig build is still so suck 

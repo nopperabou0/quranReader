@@ -2,7 +2,7 @@ const std = @import("std");
 
 pub fn build(b: *std.Build) void {
     const target = b.resolveTargetQuery(.{ .os_tag = .linux, .cpu_arch = .x86_64, .abi = .gnu });
-    const targetWindows = b.resolveTargetQuery(.{ .os_tag = .windows, .cpu_arch = .x86_64 });
+    const targetWindows = b.resolveTargetQuery(.{ .os_tag = .windows, .cpu_arch = .x86_64, .abi = .gnu });
     const optimize = b.standardOptimizeOption(.{});
 
     const exe = b.addExecutable(.{
@@ -19,7 +19,7 @@ pub fn build(b: *std.Build) void {
 
     exe.addCSourceFiles(.{ .files = &.{ "./src/main.c", "./include/cJSON/cJSON.c" }, .flags = &.{ "-Wall", "-Wextra", "-std=c99", "-pedantic", "-g3" } });
 
-    exeWindows.addCSourceFiles(.{ .files = &.{ "./src/main.c", "./include/cJSON/cJSON.c" }, .flags = &.{ "-Wall", "-Wextra", "-std=c99", "-pedantic" } });
+    exeWindows.addCSourceFiles(.{ .files = &.{ "./src/main.c", "./include/cJSON/cJSON.c", "./src/windowsonly.c" }, .flags = &.{ "-Wall", "-Wextra", "-std=c99", "-pedantic" } });
 
     exe.addIncludePath(b.path("."));
     exeWindows.addIncludePath(b.path("."));
@@ -31,6 +31,7 @@ pub fn build(b: *std.Build) void {
     exeWindows.linkSystemLibrary("gdi32");
     exeWindows.linkSystemLibrary("winmm");
     exeWindows.linkSystemLibrary("opengl32");
+    exeWindows.linkSystemLibrary("bcrypt");
 
     exe.linkLibC();
     exeWindows.linkLibC();
