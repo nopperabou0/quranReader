@@ -1,6 +1,8 @@
 #ifndef __WINDOWSONLY_H__
 #define __WINDOWSONLY_H__
 
-int randomizeNumber (void);
+
+
+unsigned int randomizeNumberWindows (void);
 
 #endif

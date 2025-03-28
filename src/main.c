@@ -13,6 +13,7 @@
 #include <stdlib.h>
 #include <string.h>
 
+
 typedef struct {
     char* name;
     FILE* p ;
@@ -36,6 +37,8 @@ const cJSON* arabic;
 File populateFile(File*);
 char *readFile(File*);
 cJSON *parseFile(char *buffer);  
+unsigned int randomizeNumber (void);
+
 
 int main(void){
     const int WIDTH_SCREEN = 800;
@@ -74,47 +77,39 @@ int main(void){
 
     //TO DO : randomizer for id 
     
-    cJSON_ArrayForEach(dataJSON.element,dataJSON.data){
-        dataJSON.id = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"id");
-        dataJSON.chapter = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"chapter");
-        dataJSON.verse = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"verse");
-        dataJSON.english = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"english");
-        dataJSON.arabic = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"arabic");  
-        if (!strcmp(dataJSON.id->valuestring,"4"))
-        {
-            printf("id is %s\n",dataJSON.id->valuestring);
-            printf("chapter is %s\n",dataJSON.chapter->valuestring);
-        } 
-    }
 
-    cJSON_Delete(dataJSON.element);
-    
-    #ifdef _WIN32
-    int  number =  randomizeNumber ();
-    char str[12];          
-
-    snprintf(str, sizeof(str), "%i", number);
-    cJSON_ArrayForEach(dataJSON.element,dataJSON.data){
-        dataJSON.id = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"id");
-        dataJSON.chapter = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"chapter");
-        dataJSON.verse = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"verse");
-        dataJSON.english = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"english");
-        dataJSON.arabic = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"arabic");  
-        if (!strcmp(dataJSON.id->valuestring,str))
-        {
-            printf("id is %s\n",dataJSON.id->valuestring);
-            printf("chapter is %s\n",dataJSON.chapter->valuestring);
-            printf("arabic is %s\n",dataJSON.arabic->valuestring);
-        } 
-    }
-
-
-
-    #endif
-    
     SetTargetFPS(60);
     
     while(!WindowShouldClose()){
+
+        if (dataJSON.element != NULL) {
+            cJSON_Delete(dataJSON.element);
+        }
+
+        unsigned int randomNumber = randomizeNumber();
+        char randomNumberInString[12];
+        int writtenCount = snprintf(randomNumberInString,12,"%u",randomNumber);
+
+        if (writtenCount <= 0) {
+            fprintf(stderr,"[ERROR] Error when convert random number to string \n");
+            exit(EXIT_FAILURE);
+        }
+
+        cJSON_ArrayForEach(dataJSON.element,dataJSON.data){
+            dataJSON.id = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"id");
+            dataJSON.chapter = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"chapter");
+            dataJSON.verse = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"verse");
+            dataJSON.english = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"english");
+            dataJSON.arabic = cJSON_GetObjectItemCaseSensitive(dataJSON.element,"arabic");  
+            if (!strcmp(dataJSON.id->valuestring,randomNumberInString))
+            {
+                printf("id is %s\n",dataJSON.id->valuestring);
+                printf("chapter is %s\n",dataJSON.chapter->valuestring);
+                printf("arabic is %s\n",dataJSON.arabic->valuestring);
+                
+            } 
+        }
+
         BeginDrawing();
        
          ClearBackground(RAYWHITE);
@@ -234,6 +229,47 @@ cJSON *parseFile (char* buffer){
     return fileJSON;
 }  
 
+unsigned int randomizeNumber (void){
+    unsigned int randomNumber;
+
+    #ifdef _WIN32
+    randomNumber =  randomizeNumberWindows();
+    #else 
+    
+    unsigned int seed;
+    size_t seedCount = 1;
+    
+    FILE* randomizer = fopen("/dev/urandom","r");
+    if (feof(randomizer)){
+        perror("[ERROR] How tf urandom even empty to begin with \n");        
+        exit(EXIT_FAILURE);
+    }
+    if (ferror(randomizer)){
+        perror("[ERROR] Error when opening urandom \n");
+        exit (EXIT_FAILURE);
+    }
+    
+    size_t seedSize = fread(&seed,sizeof(seed),seedCount,randomizer);
+    if (seedSize != 1) {
+        perror("[ERROR] Read urandom failed \n");
+        fclose(randomizer);
+        exit(EXIT_FAILURE);
+    }
+
+    fclose(randomizer);
+
+    int max = 6348;
+    int min = 1;
+
+    randomNumber = seed % (max-min+1)+min;
+    printf("[INFO] Random number seed : %u\n", seed);
+    printf("[INFO] Random number between %u and %u: %u\n", min, max, randomNumber);
+
+
+    #endif //_WIN32
+
+    return randomNumber;
+}
 
 
 
