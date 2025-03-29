@@ -25,8 +25,24 @@ pub fn build(b: *std.Build) void {
     exeWindows.addIncludePath(b.path("."));
 
     exe.addObjectFile(b.path("lib/linux/libraylib.a"));
+    exe.addObjectFile(b.path("lib/linux/libcurl.a"));
+    exe.addObjectFile(b.path("lib/linux/libssl.a"));
+    exe.addObjectFile(b.path("lib/linux/libcrypto.a"));
+    exe.addObjectFile(b.path("lib/linux/libz.a"));
+    exe.addObjectFile(b.path("lib/linux/libzstd.a"));
+    exe.addObjectFile(b.path("lib/linux/libidn2.a"));
+    exe.addObjectFile(b.path("lib/linux/libnghttp3.a"));
+    exe.addObjectFile(b.path("lib/linux/libnghttp2.a"));
+    exe.addObjectFile(b.path("lib/linux/libssh2.a"));
+    exe.addObjectFile(b.path("lib/linux/libbrotlidec.a"));
+    exe.addObjectFile(b.path("lib/linux/libbrotlienc.a"));
+    exe.addObjectFile(b.path("lib/linux/libbrotlicommon.a"));
+    exe.addObjectFile(b.path("lib/linux/libpsl.a"));
+    exe.addObjectFile(b.path("lib/linux/libunistring.a"));
+    exe.addObjectFile(b.path("lib/linux/libcares.a"));
 
     exeWindows.addObjectFile(b.path("lib/windows/libraylib.a"));
+    // exeWindows.addObjectFile(b.path("lib/windows/libcurl.a"));
 
     exeWindows.linkSystemLibrary("gdi32");
     exeWindows.linkSystemLibrary("winmm");

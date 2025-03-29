@@ -1,7 +1,9 @@
 #ifdef _WIN32
 #include "include/windows/raylib.h"
 #include "include/windows/windowsonly.h"
+// #include "include/windows/curl/curl.h"
 #else
+#include "include/linux/curl/curl.h"
 #include "include/linux/raylib.h"
 #endif
 
@@ -34,6 +36,10 @@ File populateFile(File *);
 char *readFile(File *);
 cJSON *parseFile(char *buffer);
 unsigned int randomizeNumber(void);
+#ifdef _WIN32
+#else
+int downloadJSON(File*);
+#endif
 
 int main(void) {
   const int WIDTH_SCREEN = 800;
@@ -148,14 +154,27 @@ File populateFile(File *pFile) {
   if (feof(file.p)) {
     printf("[INFO] File Empty, When it shouldnt \n");
 
-    // TO DO : Download json content over internet and put it into file,
-    // will return error if copy failed
-    //  (void)perror("[Error] Failed copying file over internet")
-    //  exit(EXIT_FAILURE)
+// TO DO : Download json content over internet and put it into file,
+// will return error if copy failed
+//  (void)perror("[Error] Failed copying file over internet")
+//  exit(EXIT_FAILURE)
+#ifdef _WIN32
+#else
+    downloadJSON(&file);
+#endif
   }
 
   (void)ungetc(file.status, file.p);
 
+  // file must open in read mode
+  if (strcmp(file.mode, "r")) {
+    file.mode = "r";
+    file.p = freopen(file.name, file.mode, file.p);
+    if (!file.p) {
+      (void)perror("[Error] Failed setting file mode to read \n");
+      exit(EXIT_FAILURE);
+    }
+  }
   printf("[INFO] File not empty! \n");
   printf("[INFO] Lets Start Reading JSON now!\n");
 
@@ -172,7 +191,7 @@ char *readFile(File *pFile) {
     const int ch = fgetc(file.p);
 
     if (ferror(file.p)) {
-      (void)perror("[ERROR] Reading failed \n");
+      (void)perror("[ERROR] Reading failed ");
       free(buffer);
       exit(EXIT_FAILURE);
     }
@@ -255,3 +274,41 @@ unsigned int randomizeNumber(void) {
 
   return randomNumber;
 }
+
+#ifdef _WIN32
+#else
+// https://stackoverflow.com/questions/1636333/download-file-using-libcurl-in-c-c
+int downloadJSON(File *file) {
+  (void)printf("[INFO] Download JSON over internet \n");
+  CURL *curl;
+  // FILE *fP;
+  CURLcode res;
+  char *url = "https://raw.githubusercontent.com/nopperabou0/quranReader/refs/"
+              "heads/main/quran.json";
+  char outfilename[FILENAME_MAX] = "quran.json";
+  curl = curl_easy_init();
+  file->mode = "w";
+  if (curl) {
+    // fP = fopen(outfilename,"w");
+    file->p = freopen(outfilename, file->mode, file->p);
+    if (!file->p) {
+      (void)perror("[Error] Failed setting file mode to write \n");
+      exit(EXIT_FAILURE);
+    }
+    curl_easy_setopt(curl, CURLOPT_URL, url);
+    curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
+    curl_easy_setopt(curl, CURLOPT_WRITEDATA, file->p);
+    res = curl_easy_perform(curl);
+    // Check if the download was successful
+    if (res != CURLE_OK) {
+      fprintf(stderr, "[Error] curl_easy_perform() failed: %s\n",
+              curl_easy_strerror(res));
+    } else {
+      printf("[INFO] File downloaded successfully.\n");
+    }
+    curl_easy_cleanup(curl);
+    // fclose(fP);
+  }
+  return 0;
+}
+#endif
