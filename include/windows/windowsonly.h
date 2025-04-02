@@ -1,5 +1,5 @@
-#ifndef __WINDOWSONLY_H__
-#define __WINDOWSONLY_H__
+#ifndef WINDOWSONLY_H
+#define WINDOWSONLY_H
 
 
 

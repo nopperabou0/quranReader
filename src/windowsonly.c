@@ -5,6 +5,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+
 typedef struct {
   BCRYPT_ALG_HANDLE algorithm;
   PUCHAR buffer;
@@ -17,11 +18,11 @@ unsigned int randomizeNumberWindows(void) {
   ULONG randomValue;
 
   Randomizer r = {
-      .algorithm = NULL,                 // Use the default RNG provider.
-      .buffer = (PUCHAR)&randomValue,    // Buffer to receive random bytes.
-      .bufferSize = sizeof(randomValue), // Size of the buffer.
-      .flags = BCRYPT_USE_SYSTEM_PREFERRED_RNG // Use the system-preferred
-                                               // random number generator.
+      .algorithm = NULL,                          // Use the default RNG provider.
+      .buffer = (PUCHAR)&randomValue,             // Buffer to receive random bytes.
+      .bufferSize = sizeof(randomValue),          // Size of the buffer.
+      .flags = BCRYPT_USE_SYSTEM_PREFERRED_RNG    // Use the system-preferred
+                                                  // random number generator.
   };
 
   NTSTATUS status =

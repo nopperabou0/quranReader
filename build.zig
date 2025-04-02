@@ -25,6 +25,7 @@ pub fn build(b: *std.Build) void {
     exeWindows.addIncludePath(b.path("."));
 
     exe.addObjectFile(b.path("lib/linux/libraylib.a"));
+    //curl stuffs
     exe.addObjectFile(b.path("lib/linux/libcurl.a"));
     exe.addObjectFile(b.path("lib/linux/libssl.a"));
     exe.addObjectFile(b.path("lib/linux/libcrypto.a"));

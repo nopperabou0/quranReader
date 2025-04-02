@@ -34,7 +34,9 @@ zig build run
 - bcrypt https://crypto.stackexchange.com/questions/107946/is-there-a-counterpart-of-dev-random-and-dev-urandom-in-windows-nt-systems
 - bcrypt https://learn.microsoft.com/en-us/windows/win32/api/bcrypt/nf-bcrypt-bcryptgenrandom
 - randomize number in range using urandom https://www.geeksforgeeks.org/generating-random-number-range-c/
+- static-curl useful af https://github.com/stunnel/static-curl
 - download using libcurl https://stackoverflow.com/questions/1636333/download-file-using-libcurl-in-c-c
+
 
 ## Roadmap
 - [x] making build.zig
