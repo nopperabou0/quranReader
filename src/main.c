@@ -5,6 +5,7 @@ int main(void) {
   const int HEIGHT_SCREEN = 600;  
   (void)InitWindow(WIDTH_SCREEN, HEIGHT_SCREEN, "Quran Reader");
   
+  cJSON *fileJSON = NULL;
   DataJSON dataJSON = {
     .data = NULL,
     .element = NULL,
@@ -15,7 +16,15 @@ int main(void) {
     .arabic = NULL
   };
 
-  setupStep(&dataJSON);
+  setupStep(fileJSON);
+
+  if (fileJSON==NULL){
+    TraceLog(LOG_ERROR, "File JSON is NULL, how ?! \n");
+    exit(EXIT_FAILURE);
+  }
+  
+  dataJSON.data = cJSON_GetObjectItemCaseSensitive(fileJSON, "data");
+
   SetTargetFPS(60);
 
   while (!WindowShouldClose()) {

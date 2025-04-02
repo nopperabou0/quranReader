@@ -15,7 +15,7 @@ char *readFile(File *pFile);
 cJSON *parseFile(char *buffer);
 int downloadJSON(File *);
 
-void setupStep(DataJSON *dataJSON) {
+void setupStep(cJSON *fileJSON) {
 
   File file = {.name = "quran.json", .p = NULL, .mode = "r", .status = EOF};
 
@@ -27,11 +27,8 @@ void setupStep(DataJSON *dataJSON) {
   fclose(file.p); // Maybe should check the error
 
   TraceLog(LOG_INFO, "Parsing File...\n");
-  cJSON *fileJSON = parseFile(buffer);
+  fileJSON = parseFile(buffer);
   free(buffer);
-
-
-  dataJSON->data = cJSON_GetObjectItemCaseSensitive(fileJSON, "data");
 }
 
 
@@ -159,7 +156,7 @@ cJSON *parseFile(char *buffer) {
 // |||-------------------------------|||
 // |||---------Download JSON---------|||
 // |||-------------------------------|||
-
+// https://stackoverflow.com/questions/1636333/download-file-using-libcurl-in-c-c
 int downloadJSON(File *file) {
   // file must open in write mode
   TraceLog(LOG_INFO, "Setting file to write mode \n");
